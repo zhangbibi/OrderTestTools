@@ -9,6 +9,7 @@ $(function () {
         initInsuredRelation(global.configJSON.insuredRelationKey, global.configJSON.insuredRelationJSON);
         initBenefitRelationToIns(global.configJSON.insuredRelationKey, global.configJSON.insuredRelationJSON);
         initBenefitType(global.configJSON.benefitTypeKey, global.configJSON.benefitTypeJSON);
+        initEffectiveDate();
         //绑定页面事件
         bindEvent();
     }
@@ -42,6 +43,21 @@ $(function () {
         $("#benefitType").html(optionHTML);
     }
 
+    function initEffectiveDate() {
+        var now = new Date();
+        var tomorrow = new Date();
+        tomorrow.setTime(now.getTime() + 24 * 60 * 60 * 1000);
+        var month = tomorrow.getMonth() + 1;
+        var day = tomorrow.getDate();
+        if (month < 10) {
+            month = "0" + month;
+        }
+        if (day < 10) {
+            day = "0" + day;
+        }
+        var tomorrowStr = tomorrow.getFullYear() + "-" + month + "-" + day;
+        $("#effectiveDate").val(tomorrowStr);
+    }
 
     function getOptionHTML(keyArray, valueJSON) {
         var optionHTML = "";
@@ -117,17 +133,138 @@ $(function () {
         });
         //生成订单
         $("#sendOrder").bind("click", function (e) {
+            var isValidate = validateParams();
+            if (!isValidate) {
+                $("#tips").show();
+                return;
+            }
             var data = {
-                "xxx" : "HelloWorld"
-            }
+                "baseInfo": {
+                    "env": $("#env").val(),
+                    "salesChannel": $("#salesChannel").val(),
+                    "salesSource": $("#salesSource").val(),
+                    "effectiveDate": $("#effectiveDate").val()
+                },
+                "appInfo": {
+                    "appName": $("#appName").val(),
+                    "appBirthday": $("#appBirthday").val(),
+                    "appSex": $("#appSex").val(),
+                    "appIDNo": $("#appIDNo").val(),
+                    "appPhoneNo": $("#appPhoneNo").val()
+                },
+                "insInfo": {
+                    "relationToApp": $("#relationToApp").val(),
+                    "insName": $("#insName").val(),
+                    "insBirthday": $("#insBirthday").val(),
+                    "insSex": $("#insSex").val(),
+                    "insIDNo": $("#insIDNo").val(),
+                    "insPhoneNo": $("#insPhoneNo").val()
+                },
+                "productInfo": {
+                    "product": $("#product").val()
+                },
+                "benefitInfo": {
+                    "beneficiaryType": $("#beneficiaryType").val(),
+                    "relationToIns": $("#relationToIns").val(),
+                    "benefitType": $("#benefitType").val(),
+                    "benefitName": $("#benefitName").val(),
+                    "benefitBirthday": $("#benefitBirthday").val(),
+                    "benefitSex": $("#benefitSex").val(),
+                    "benefitIDNo": $("#benefitIDNo").val()
+                }
+            };
             var options = {
-                'url' : '/order/mock/order/send.mock',
+                'url': '/order/mock/order/send.mock',
             }
-            var callback = function(data) {
-                console.log(data);
+            var callback = function (data) {
+                renderResultAfterSendOrder(data);
             }
             request.post(data, callback, options);
         });
+    }
+
+    function renderResultAfterSendOrder(data) {
+        $("#orderResult").show();
+        clearResult();
+        if (data.rt_code == 400000) {
+            $("#result_status").html("失败");
+            $("#result_orderNo").html(data.data);
+            $("#result_errMsg").html(data.rt_msg);
+        } else if (data.rt_code == 0) {
+            $("#result_status").html("请求中,稍等...");
+            $("#result_orderNo").html(data.data);
+            showProgressAfterSendOrder(data.data);
+        }
+    }
+
+    function showProgressAfterSendOrder(orderNo) {
+        var html = ['<div id="progress_mask" style="position: fixed;z-index: 1;width: 100%;height: 100%;top: 0;left: 0;background: rgba(16, 16, 16, 0.69);"><div>',
+            '<div style="position: fixed;z-index: 13;width: 60%;top: 50%;left: 50%;transform: translate(-50%, -50%);text-align: center;border-radius: 5px;" class="loading_box" id="progress_dialog">',
+            '<div style="height: 40px;color: white;font-size: larger;">正在查询保单状态,耐心等</div>',
+            '<div class="progress progress-striped active">',
+            '<div id="progressDIV" class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: 0%;"></div></div>'
+        ].join('');
+        removeProgress();
+        $(document.body).append(html);
+        var pregressWidth = 0;
+        global.intv = setInterval(function () {
+            pregressWidth += 1;
+            $("#progressDIV").css("width", pregressWidth + "%");
+            if (pregressWidth >= 100) {
+                queryPolicyStatus(orderNo);
+            }
+        }, 100);
+    }
+
+    function queryPolicyStatus(orderNo) {
+        clearInterval(global.intv);
+        removeProgress();
+        var data = {
+            "env": $("#env").val(),
+            "orderNo": orderNo
+        };
+        var options = {
+            'url': '/order/mock/order/query.mock',
+        }
+        var callback = function (data) {
+            if (data.rt_code == 0 && data.data.policy_status == "1" && data.data.policy_no) {
+                $("#result_status").html("成功");
+                $("#result_policyNo").html(data.data.policy_no);
+            } else {
+                $("#result_status").html("失败");
+                $("#result_errMsg").html(data.data.err_msg);
+            }
+        }
+        request.post(data, callback, options);
+    }
+
+    function removeProgress() {
+        $("#progress_mask").remove();
+        $("#progress_dialog").remove();
+    }
+
+    function clearResult() {
+        $("#result_status").html("");
+        $("#result_orderNo").html("");
+        $("#result_policyNo").html("");
+        $("#result_errMsg").html("");
+    }
+
+    function validateParams() {
+        $("#tips").hide();
+        $("#orderResult").hide();
+        $(".has-error").removeClass("has-error");
+        var isValidate = true;
+        var notBlankInputArr = $("[validate-blank]");
+        console.log(notBlankInputArr.length);
+        for (var i = 0; i < notBlankInputArr.length; i++) {
+            var $input = $(notBlankInputArr[i]);
+            if (!$input.val()) {
+                $input.parent().parent().addClass("has-error");
+                isValidate = false;
+            }
+        }
+        return isValidate;
     }
 
     function renderBenefitInfoWhenChoiceRelation(isIns) {
@@ -141,7 +278,6 @@ $(function () {
                 $("#benefitBirthday").val(insBirthday);
                 $("#benefitSex").val(insSex);
                 $("#benefitIDNo").val(insIDNo);
-
                 $("#benefitType").val("0");
                 $("#beneficiaryType").val("01");
                 setDisabledAttr("set", [$("#benefitType"), $("#benefitName"), $("#benefitBirthday"), $("#benefitSex"), $("#benefitIDNo"), $("#genBenefitIDNO")]);
@@ -159,6 +295,7 @@ $(function () {
             setDisabledAttr("remove", [$("#relationToIns"), $("#benefitType"), $("#benefitName"), $("#benefitBirthday"), $("#benefitSex"), $("#benefitIDNo"), $("#genBenefitIDNO")]);
         } else {
             setValueBlank([$("#relationToIns"), $("#benefitType"), $("#benefitName"), $("#benefitBirthday"), $("#benefitSex"), $("#benefitIDNo")]);
+            $("#benefitName").val("法定");
             setDisabledAttr("set", [$("#relationToIns"), $("#benefitType"), $("#benefitName"), $("#benefitBirthday"), $("#benefitSex"), $("#benefitIDNo"), $("#genBenefitIDNO")]);
         }
     }

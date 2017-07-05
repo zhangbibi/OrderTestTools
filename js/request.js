@@ -16,13 +16,10 @@ var request = (function($) {
 			url:options.url,
 			type:type,
 			async:options.async,
-            contentType:"application/json",
+            contentType: "application/json;charset=utf-8",
 			dataType:options.dataType,
-			data:data,
+			data:JSON.stringify(data),
 			timeout:300000,
-			beforeSend:function(XMLHttpRequest){
-				$('body,html').scrollTop(0);// 修复iphone没收起键盘直接点击按钮触发ajax时的样式错位
-			},
 			success:function(data){
 				callback(data);
 				removeLoading();
@@ -38,9 +35,6 @@ var request = (function($) {
 				}		   
 			}
 		};
-		if(options.contentType) {
-			requestData.contentType='application/json;charset=utf-8'
-		}
 		$.ajax(requestData);
 	}
 	function removeLoading(){

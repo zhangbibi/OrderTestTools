@@ -15,5 +15,19 @@
 }
 .buttonClass1{
     text-align: center;
-    padding: 40px 0px;
+    padding: 20px 0px 40px 0px;
+}
+.tipClass{
+    width: 50%;
+    text-align: center;
+    margin: 20px auto 0px auto;
+    display: none;
+}
+.resultClass{
+    margin: 20px 60px 0px 60px;
+    display: none;
+}
+.spot{
+    color: #ff2400;
+    font-size: large;
 }
