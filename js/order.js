@@ -10,6 +10,7 @@ $(function () {
         initBenefitRelationToIns(global.configJSON.insuredRelationKey, global.configJSON.insuredRelationJSON);
         initBenefitType(global.configJSON.benefitTypeKey, global.configJSON.benefitTypeJSON);
         initEffectiveDate();
+        initApplyBirthday();
         //绑定页面事件
         bindEvent();
     }
@@ -58,6 +59,21 @@ $(function () {
         var tomorrowStr = tomorrow.getFullYear() + "-" + month + "-" + day;
         $("#effectiveDate").val(tomorrowStr);
     }
+
+    function initApplyBirthday() {
+        var birthady = new Date("1980/01/01");
+        var month = birthady.getMonth() + 1;
+        var day = birthady.getDate();
+        if (month < 10) {
+            month = "0" + month;
+        }
+        if (day < 10) {
+            day = "0" + day;
+        }
+        var appBirthday = birthady.getFullYear() + "-" + month + "-" + day;
+        $("#appBirthday").val(appBirthday);
+    }
+
 
     function getOptionHTML(keyArray, valueJSON) {
         var optionHTML = "";
