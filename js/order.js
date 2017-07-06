@@ -217,7 +217,7 @@ $(function () {
     function showProgressAfterSendOrder(orderNo) {
         var html = ['<div id="progress_mask" style="position: fixed;z-index: 1;width: 100%;height: 100%;top: 0;left: 0;background: rgba(16, 16, 16, 0.69);"><div>',
             '<div style="position: fixed;z-index: 13;width: 60%;top: 50%;left: 50%;transform: translate(-50%, -50%);text-align: center;border-radius: 5px;" class="loading_box" id="progress_dialog">',
-            '<div style="height: 40px;color: white;font-size: larger;">投保中,请勿关闭页面,耐心等耐...</div>',
+            '<div style="height: 40px;color: white;font-size: larger;">投保中,请勿关闭页面,耐心等待...</div>',
             '<div class="progress progress-striped active">',
             '<div id="progressDIV" class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: 0%;"></div></div>'
         ].join('');
