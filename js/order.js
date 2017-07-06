@@ -10,7 +10,7 @@ $(function () {
         initBenefitRelationToIns(global.configJSON.insuredRelationKey, global.configJSON.insuredRelationJSON);
         initBenefitType(global.configJSON.benefitTypeKey, global.configJSON.benefitTypeJSON);
         initEffectiveDate();
-        initApplyBirthday();
+        initApplyInfo();
         //绑定页面事件
         bindEvent();
     }
@@ -60,7 +60,7 @@ $(function () {
         $("#effectiveDate").val(tomorrowStr);
     }
 
-    function initApplyBirthday() {
+    function initApplyInfo() {
         var birthady = new Date("1980/01/01");
         var month = birthady.getMonth() + 1;
         var day = birthady.getDate();
@@ -72,8 +72,9 @@ $(function () {
         }
         var appBirthday = birthady.getFullYear() + "-" + month + "-" + day;
         $("#appBirthday").val(appBirthday);
-    }
+        $("#appPhoneNo").val("13888888888");
 
+    }
 
     function getOptionHTML(keyArray, valueJSON) {
         var optionHTML = "";
@@ -216,7 +217,7 @@ $(function () {
     function showProgressAfterSendOrder(orderNo) {
         var html = ['<div id="progress_mask" style="position: fixed;z-index: 1;width: 100%;height: 100%;top: 0;left: 0;background: rgba(16, 16, 16, 0.69);"><div>',
             '<div style="position: fixed;z-index: 13;width: 60%;top: 50%;left: 50%;transform: translate(-50%, -50%);text-align: center;border-radius: 5px;" class="loading_box" id="progress_dialog">',
-            '<div style="height: 40px;color: white;font-size: larger;">正在查询保单状态,耐心等</div>',
+            '<div style="height: 40px;color: white;font-size: larger;">投保中,请勿关闭页面,耐心等耐...</div>',
             '<div class="progress progress-striped active">',
             '<div id="progressDIV" class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: 0%;"></div></div>'
         ].join('');
@@ -224,7 +225,7 @@ $(function () {
         $(document.body).append(html);
         var pregressWidth = 0;
         global.intv = setInterval(function () {
-            pregressWidth += 1;
+            pregressWidth += 0.5;
             $("#progressDIV").css("width", pregressWidth + "%");
             if (pregressWidth >= 100) {
                 queryPolicyStatus(orderNo);
@@ -246,6 +247,8 @@ $(function () {
             if (data.rt_code == 0 && data.data.policy_status == "1" && data.data.policy_no) {
                 $("#result_status").html("成功");
                 $("#result_policyNo").html(data.data.policy_no);
+                $("#result_product_code").html($("#product").val());
+                $("#result_effective_time").html(data.data.effective_date);
             } else {
                 $("#result_status").html("失败");
                 $("#result_errMsg").html(data.data.err_msg);
@@ -264,6 +267,8 @@ $(function () {
         $("#result_orderNo").html("");
         $("#result_policyNo").html("");
         $("#result_errMsg").html("");
+        $("#result_effective_time").html("");
+        $("#result_product_code").html("");
     }
 
     function validateParams() {
